@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1>Welcome to the Django Todo App!</h1>
+  <p>This is your personal todo list application.</p>
+  {% if user.is_authenticated %}
+    <p>Hello, {{ user.username }}! You are logged in.</p>
+    <p><a href="{% url 'todo:list' %}" class="btn btn-primary">View My Todos</a></p>
+  {% else %}
+    <p>Please <a href="{% url 'login' %}">login</a> or <a href="{% url 'signup' %}">sign up</a> to manage your todos.</p>
+  {% endif %}
+{% endblock %}
