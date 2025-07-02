@@ -1,117 +1,142 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}Django Todo{% endblock %}</title>
-  {% load bootstrap5 %}
-  {% bootstrap_css %}
-  {% bootstrap_javascript %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Todo App{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .toast-container {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 1055;
+        }
+    </style>
 </head>
 <body>
-  <nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="{% url 'home' %}">Django Todo</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto">
-          {% if user.is_authenticated %}
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'todo:list' %}">My Todos</a>
-            </li>
-            <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" id="notificationsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                Notifications <span class="badge bg-danger rounded-pill" id="notification-count">0</span>
-              </a>
-              <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationsDropdown" id="notification-list">
-                <li><a class="dropdown-item" href="#">No new notifications</a></li>
-              </ul>
-            </li>
-            <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                {{ user.username }}
-              </a>
-              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                <li><a class="dropdown-item" href="{% url 'logout' %}">Logout</a></li>
-              </ul>
-            </li>
-          {% else %}
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'login' %}">Login</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'signup' %}">Sign Up</a>
-            </li>
-          {% endif %}
-        </ul>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{% url 'todo_list' %}">TodoApp</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="notification-bell" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-bell"></i>
+                                <span class="badge rounded-pill badge-notification bg-danger" id="notification-count">{{ notifications.count }}</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notification-bell" id="notification-list">
+                                {% for notification in notifications %}
+                                    <li><a class="dropdown-item" href="#">{{ notification.message }}</a></li>
+                                {% empty %}
+                                    <li><a class="dropdown-item" href="#">No new notifications</a></li>
+                                {% endfor %}
+                            </ul>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'logout' %}">Logout</a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'login' %}">Login</a>
+                        </li>
+                         <li class="nav-item">
+                            <a class="nav-link" href="{% url 'signup' %}">Sign Up</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        {% block content %}
+        {% endblock %}
+    </div>
+
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+      <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+          <strong class="me-auto">Notification</strong>
+          <small>Just now</small>
+          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body" id="toast-body">
+          </div>
       </div>
     </div>
-  </nav>
-  <div class="container mt-4">
-    {% block content %}
-    {% endblock %}
-  </div>
 
-  <div class="toast-container position-fixed bottom-0 end-0 p-3">
-    <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-      <div class="toast-header">
-        <strong class="me-auto">Notification</strong>
-        <small>Just now</small>
-        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-      </div>
-      <div class="toast-body" id="toast-body">
-      </div>
-    </div>
-  </div>
 
-  <script>
-    const notificationSocket = new WebSocket(
-        'ws://' +
-        window.location.host +
-        '/ws/notifications/'
-    );
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-    notificationSocket.onopen = function(e) {
-        console.log('Notification socket opened successfully');
-    };
+    {% if user.is_authenticated %}
+    <script>
+        const notificationSocket = new WebSocket(
+            'ws://' +
+            window.location.host +
+            '/ws/notifications/'
+        );
 
-    notificationSocket.onmessage = function(e) {
-        const data = JSON.parse(e.data);
-        const notificationList = document.getElementById('notification-list');
-        const notificationCount = document.getElementById('notification-count');
+        notificationSocket.onopen = function(e) {
+            console.log('Notification socket opened successfully');
+        };
 
-        // Remove "No new notifications" if it exists
-        const noNotificationsItem = notificationList.querySelector('li a[href="#"]');
-        if (noNotificationsItem && noNotificationsItem.textContent === 'No new notifications') {
-            noNotificationsItem.parentElement.remove();
-        }
+        notificationSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            const notificationList = document.getElementById('notification-list');
+            const notificationCount = document.getElementById('notification-count');
 
-        // Add new notification to the list
-        const newNotificationItem = document.createElement('li');
-        newNotificationItem.innerHTML = `<a class="dropdown-item" href="#">${data.message}</a>`;
-        notificationList.prepend(newNotificationItem); // Add to top
+            // Remove the "No new notifications" item if it exists
+            const noNotificationsItem = notificationList.querySelector('li a[href="#"]');
+            if (noNotificationsItem && noNotificationsItem.textContent === 'No new notifications') {
+                noNotificationsItem.parentElement.remove();
+            }
 
-        // Update notification count
-        let currentCount = parseInt(notificationCount.textContent);
-        notificationCount.textContent = currentCount + 1;
+            // Add new notification to the top of the list
+            const newNotificationItem = document.createElement('li');
+            newNotificationItem.innerHTML = `<a class="dropdown-item" href="#">${data.message}</a>`;
+            notificationList.prepend(newNotificationItem);
 
-        // Also show as a toast for immediate visibility
-        const toastBody = document.getElementById('toast-body');
-        toastBody.textContent = data.message;
-        const liveToast = document.getElementById('liveToast');
-        const toast = new bootstrap.Toast(liveToast);
-        toast.show();
-    };
+            // Update the notification count
+            let currentCount = parseInt(notificationCount.textContent);
+            notificationCount.textContent = currentCount + 1;
 
-    notificationSocket.onclose = function(e) {
-        console.error('Notification socket closed unexpectedly', e);
-    };
+            // Show a toast notification
+            const toastBody = document.getElementById('toast-body');
+            toastBody.textContent = data.message;
+            const liveToast = document.getElementById('liveToast');
+            const toast = new bootstrap.Toast(liveToast);
+            toast.show();
+        };
 
-    notificationSocket.onerror = function(e) {
-        console.error('Notification socket error', e);
-    };
-  </script>
+        notificationSocket.onclose = function(e) {
+            console.error('Notification socket closed unexpectedly');
+        };
+
+        notificationSocket.onerror = function(e) {
+            console.error('Notification socket error', e);
+        };
+
+        // Add event listener to mark notifications as read when the bell is clicked
+        document.getElementById('notification-bell').addEventListener('click', function() {
+            // Send message to server to mark notifications as read
+            notificationSocket.send(JSON.stringify({
+                'type': 'mark_as_read'
+            }));
+            // Optimistically set the visual count to 0
+            document.getElementById('notification-count').textContent = '0';
+        });
+    </script>
+    {% endif %}
+
 </body>
 </html>
