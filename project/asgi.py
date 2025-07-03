@@ -1,16 +1,19 @@
 import os
+from django.core.asgi import get_asgi_application
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project.settings")
+# Initialize Django ASGI application early to ensure the AppRegistry
+# is populated before importing code that may import ORM models.
+http_application = get_asgi_application()
 
 from channels.auth import AuthMiddlewareStack
 from channels.routing import ProtocolTypeRouter, URLRouter
-from django.core.asgi import get_asgi_application
-
 from todo import routing
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project.settings")
 
 application = ProtocolTypeRouter(
     {
-        "http": get_asgi_application(),
+        "http": http_application,
         "websocket": AuthMiddlewareStack(URLRouter(routing.websocket_urlpatterns)),
     }
 )
